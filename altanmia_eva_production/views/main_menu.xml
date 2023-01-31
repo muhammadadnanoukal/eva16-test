@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <!-- Top menu item -->
+        <menuitem id="eva_menu_root"
+            name="Eva"
+            web_icon="altanmia_eva_production,static/description/icon.png"
+            sequence="0"/>
+
+        <!--Show Assets list menu item-->
+        <menuitem id="eva_product_menu"
+                  name="Products"
+                  parent="eva_menu_root"
+                  sequence="1"/>
+
+        <menuitem id="eva_product_show"
+                  name="Products"
+                  action="mrp.product_template_action"
+                  parent="eva_product_menu"
+                  sequence="1"/>
+
+        <menuitem id="eva_product_variants_show"
+                  name="Product Variants"
+                  action="mrp.mrp_product_variant_action"
+                  parent="eva_product_menu"
+                  sequence="2"/>
+
+        <menuitem id="eva_bom_show"
+                  name="Bills of Materials"
+                  action="altanmia_eva_production.eva_bom_action"
+                  parent="eva_product_menu"
+                  sequence="3"/>
+
+
+</odoo>
