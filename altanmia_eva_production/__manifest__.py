@@ -10,14 +10,18 @@
             ====================
             Description
                 """,
-    'category': 'Accounting/Accounting',
+    'category': 'Manufacturing/Manufacturing',
     'website': 'https://www.odoo.com/app/invoicing',
     'images' : [],
     'depends' : ['mail','stock','mrp'],
     'data': [
         'views/bom_view.xml',
+        'views/season_view.xml',
+        'views/product_view.xml',
+        'views/dist_plan_view.xml',
         'views/main_menu.xml',
         'data/sequence_data.xml',
+        'security/eva_security.xml',
         'security/ir.model.access.csv',
     ],
     'demo': [],

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="dist_plan_tree_view" model="ir.ui.view">
+        <field name="name">distribution.plan.tree</field>
+        <field name="model">distribution.plan</field>
+        <field name="arch" type="xml">
+            <tree string="Distribution Plan" sample="1">
+                <field name="active" invisible="1"/>
+                <field name="ref"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="dist_plan_form_view" model="ir.ui.view">
+        <field name="name">distribution.plan.form</field>
+        <field name="model">distribution.plan</field>
+        <field name="arch" type="xml">
+            <form string="Season">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                    </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                            attrs="{'invisible': [('active', '=', True)]}"/>
+                    <group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
+                            <h1><field name="ref"  readonly="True"/></h1>
+                        </group>
+
+                    </group>
+
+                    <notebook>
+                        <page string="Locations" name="location">
+                            <field name="location_line" widget="one2many">
+                                <tree string="Components" editable="bottom">
+                                    <field name="company_id" invisible="1"/>
+                                    <field name="location_id"/>
+                                    <field name="percentage"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids" colspan="4" nolabel="1"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dist_plan_show" model="ir.actions.act_window">
+        <field name="name">Distribution Plan</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">distribution.plan</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No distribution plan found. Let's create one!
+            </p>
+            <p>
+                Distribution plan allow you to define of distribution of manufactured products.
+            </p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="product_season_form" model="ir.ui.view">
+            <field name="name">product_season.form</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='detailed_type']" position="after">
+                        <field name="season_id"/>
+                </xpath>
+            </field>
+    </record>
+
+    <record id="tmp_season_form" model="ir.ui.view">
+            <field name="name">tmp_season.form</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='detailed_type']" position="after">
+                        <field name="season_id"/>
+                </xpath>
+            </field>
+    </record>
+</odoo>

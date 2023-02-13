@@ -8,17 +8,20 @@ class BomInherit(models.Model):
 
     parent_id = fields.Many2one('mrp.bom', string='Template BOM', index=True)
     child_ids = fields.One2many('mrp.bom', 'parent_id', string='Variants BOM', domain=[('active', '=', True)])
+    template_bom = fields.Boolean("Is template", default=False)
 
     @api.model
     def create(self, vals):
 
         res = super().create(vals)
+        if not res.template_bom:
+            return res
         if res.parent_id:
             return res
 
         template = res.product_tmpl_id
         for prod in template.product_variant_ids:
-            values = {'product_id': prod.id, 'parent_id': res.id}
+            values = {'product_id': prod.id, 'parent_id': res.id, 'template_bom': False}
             copy = res.copy(default=values)
 
 
