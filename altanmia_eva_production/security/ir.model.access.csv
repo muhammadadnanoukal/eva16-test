@@ -7,3 +7,7 @@ access_dist_plan,dist.plan,model_distribution_plan,group_eva_user,1,0,0,0
 access_dist_plan_loc,dist.plan.loc,model_distribution_loc,group_eva_user,1,0,0,0
 access_dist_plan_manager,dist.plan.manager,model_distribution_plan,group_eva_manager,1,1,1,1
 access_dist_plan_loc_manager,dist.plan.loc.manager,model_distribution_loc,group_eva_manager,1,1,1,1
+access_prod_plan,prod.plan,model_production_plan,group_eva_user,1,0,0,0
+access_prod_plan_line,prod.plan.line,model_production_plan_line,group_eva_user,1,0,0,0
+access_prod_plan_manager,prod.plan.manager,model_production_plan,group_eva_manager,1,1,1,1
+access_prod_plan_line_manager,prod.plan.line.manager,model_production_plan_line,group_eva_manager,1,1,1,1

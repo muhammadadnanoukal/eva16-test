@@ -15,7 +15,7 @@
         <field name="name">distribution.plan.form</field>
         <field name="model">distribution.plan</field>
         <field name="arch" type="xml">
-            <form string="Season">
+            <form string="Distribution Plan">
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                     </div>

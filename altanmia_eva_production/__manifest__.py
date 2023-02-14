@@ -19,6 +19,8 @@
         'views/season_view.xml',
         'views/product_view.xml',
         'views/dist_plan_view.xml',
+        'views/prod_plan_view.xml',
+        'views/mrp_production_view.xml',
         'views/main_menu.xml',
         'data/sequence_data.xml',
         'security/eva_security.xml',

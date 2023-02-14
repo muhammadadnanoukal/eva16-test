@@ -47,5 +47,11 @@
                   parent="eva_planning_menu"
                   sequence="2"/>
 
+        <menuitem id="eva_prod_plan_show"
+                  name="Production Plan"
+                  action="altanmia_eva_production.action_prod_plan_show"
+                  parent="eva_planning_menu"
+                  sequence="3"/>
+
 
 </odoo>

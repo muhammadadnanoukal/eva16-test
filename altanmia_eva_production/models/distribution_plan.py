@@ -6,6 +6,12 @@ class DistributionPlan(models.Model):
     _name = "distribution.plan"
     _inherit = ["mail.thread", 'mail.activity.mixin']
 
+    def _compute_name(self):
+        for rec in self:
+            rec.name = "Plan %s"%rec.ref
+
+    name = fields.Char("name", compute="_compute_name")
+
     ref = fields.Char(string="Reference")
     active = fields.Boolean(string="active", default=True, tracking=True)
     company_id = fields.Many2one(
@@ -38,8 +44,9 @@ class DistributionLocation(models.Model):
 
     plane_id = fields.Many2one(
         comodel_name='distribution.plan',
-        string="Season Reference",
+        string="Distribution Plan Reference",
         required=True, ondelete='cascade', index=True, copy=False)
+
     company_id = fields.Many2one(
         related='plane_id.company_id', store=True, index=True, readonly=True)
 
