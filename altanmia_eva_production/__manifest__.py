@@ -30,6 +30,14 @@
     'installable': True,
     'application': True,
     'auto_install': False,
-    'assets': {},
+    'assets': {
+        'web.assets_frontend': [
+            'altanmia_eva_production/static/src/scss/styles.scss',
+        ],
+        'web.assets_backend': [
+            'altanmia_eva_production/static/src/scss/styles.scss',
+        ],
+
+    },
     'license': 'LGPL-3',
 }

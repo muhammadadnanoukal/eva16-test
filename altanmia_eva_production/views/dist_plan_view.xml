@@ -21,26 +21,29 @@
                     </div>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
                             attrs="{'invisible': [('active', '=', True)]}"/>
-                    <group>
+
                         <group>
                             <field name="active" invisible="1"/>
                             <field name="company_id" invisible="1"/>
                             <h1><field name="ref"  readonly="True"/></h1>
                         </group>
+                        <group>
+                            <group><field name="distribution_type" /></group>
+                            <group><field name="default_production_amount"/></group>
+                        </group>
 
-                    </group>
 
-                    <notebook>
-                        <page string="Locations" name="location">
-                            <field name="location_line" widget="one2many">
-                                <tree string="Components" editable="bottom">
-                                    <field name="company_id" invisible="1"/>
-                                    <field name="location_id"/>
-                                    <field name="percentage"/>
-                                </tree>
-                            </field>
-                        </page>
-                    </notebook>
+
+                    <field name="location_line" widget="one2many">
+                        <tree string="Locations" editable="bottom">
+                            <field name="company_id" invisible="1"/>
+                            <field name="location_id" attrs="{'column_invisible': [['parent.distribution_type', '=', 'warehouse']]}"/>
+                            <field name="warehouse_id" attrs="{'column_invisible': [['parent.distribution_type', '=', 'location']]}"/>
+                            <field name="cmp_source_location_id" attrs="{'column_invisible': [['parent.distribution_type', '=', 'warehouse']]}"/>
+                            <field name="cmp_source_warehouse_id" attrs="{'column_invisible': [['parent.distribution_type', '=', 'location']]}"/>
+                            <field name="percentage"/>
+                        </tree>
+                    </field>
 
                 </sheet>
                 <div class="oe_chatter">

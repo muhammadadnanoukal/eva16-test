@@ -20,6 +20,11 @@ class ProductionPlan(models.Model):
         'res.company', 'Company', index=True,
         default=lambda self: self.env.company)
 
+    production_type = fields.Selection([
+        ('tmp', 'Products'),
+        ('var', 'Variant'),
+    ], string="Production Level", default='tmp')
+
     @api.model
     def create(self, vals):
         vals['ref'] = self.env['ir.sequence'].next_by_code('prod.plan.ref')
@@ -28,18 +33,39 @@ class ProductionPlan(models.Model):
     def _default_production_line(self):
         if not self.season_id:
             return []
-        return [Command.create({'product_id': prod.id}) for prod in self.season_id.product_id]
 
-    def _default_production_tmp_line(self):
-        if not self.season_id:
-            return []
-        return [Command.create({'product_template_id': prod.id}) for prod in self.season_id.product_template_id]
+        if self.production_type == 'tmp':
+            return [Command.create(
+                {
+                    'product_id': prod.product_variant_id.id,
+                    'product_template_id': prod.id,
+                }) for prod in self.season_id.product_template_id]
+        else:
+            return [Command.create(
+                {
+                    'product_id': prod.id,
+                    'product_template_id': prod.product_tmpl_id.id,
+                }) for prod in self.season_id.product_id]
+
+    @api.onchange('production_type')
+    def _onchange_production_type(self):
+        if self.production_type == 'tmp':
+            self.production_line = [(5, 0, 0)] + [Command.create(
+                {
+                    'product_id': prod.product_variant_id.id,
+                    'product_template_id': prod.id,
+                }) for prod in self.season_id.product_template_id]
+        else:
+            self.production_line = [(5, 0, 0)] + [Command.create(
+                {
+                    'product_id': prod.id,
+                    'product_template_id': prod.product_tmpl_id.id,
+                }) for prod in self.season_id.product_id]
 
     @api.onchange('season_id')
     def _onchange_season_id(self):
         if self.season_id:
             self.production_line = [(5,0,0)]+[Command.create({'product_id': prod.id}) for prod in self.season_id.product_id]
-            self.production_tmp_line = [(5,0,0)]+[Command.create({'product_template_id': prod.id}) for prod in self.season_id.product_template_id]
 
     season_id = fields.Many2one('season', 'Season')
 
@@ -47,9 +73,6 @@ class ProductionPlan(models.Model):
 
     production_line = fields.One2many('production.plan.line', 'plan_id', "Production Line",
                                     tracking=True, domain=[('product_id','!=', False)], default=_default_production_line)
-
-    production_tmp_line = fields.One2many('production.plan.line', 'plan_id', "Production Template Line",
-                                      tracking=True, domain=[('product_template_id','!=', False)], default=_default_production_tmp_line)
 
     mrp_orders_count = fields.Integer('# MRP Orders', compute='_compute_orders_count')
 
@@ -66,7 +89,7 @@ class ProductionPlan(models.Model):
     def action_confirm(self):
         for rec in self:
 
-            for line in rec.production_line + rec.production_tmp_line:
+            for line in rec.production_line:
                 rec.create_mrp_orders(line)
 
             rec.write({'state': 'confirm'})
@@ -83,7 +106,7 @@ class ProductionPlan(models.Model):
             dist_total += loc_qty
             if loc == locations[-1]:
                 loc_qty += line.production_amount - dist_total
-            print("mrp order",loc,locations[-1], line.production_amount, loc.percentage, loc_qty, loc == self.distribution_plan.location_line[-1])
+
             if loc_qty == 0:
                 continue
 
@@ -95,7 +118,9 @@ class ProductionPlan(models.Model):
                     'product_id': prod.id,
                     'plan_id': self.id,
                     'product_qty': loc_qty,
-                    'location_dest_id': loc.location_id.id})
+                    'location_dest_id': loc.location_id.id,
+                    'location_src_id': loc.cmp_source_location_id.id
+                })
 
     def action_mrp_production_show(self):
         self.ensure_one()
@@ -105,7 +130,20 @@ class ProductionPlan(models.Model):
 
     def action_manufacture(self):
         for rec in self:
+            orders = self.env['mrp.production'].search([('plan_id', '=', self.id)])
+            for order in orders:
+                order.action_confirm()
             rec.write({'state': 'mrp'})
+
+    @api.onchange('distribution_plan')
+    def _onchange_distribution_plan(self):
+        for rec in self:
+            if not rec.distribution_plan:
+                return
+
+            for line in rec.production_line:
+                line.production_amount = rec.distribution_plan.default_production_amount
+                line._compute_dest_location()
 
 class ProductionPlanLine(models.Model):
     _name = "production.plan.line"
@@ -131,3 +169,20 @@ class ProductionPlanLine(models.Model):
         domain=[('sale_ok', '=', True)])
 
     production_amount = fields.Integer("Production Amount", default=0)
+
+    loc_dist = fields.Html("Distribution Locations", compute="_compute_dest_location")
+
+    def _compute_dest_location(self):
+        for rec in self:
+            if not rec.plan_id.distribution_plan:
+                rec.loc_dist = ""
+
+            loc = ""
+            for line in rec.plan_id.distribution_plan.location_line:
+                if line.percentage == 0:
+                    continue
+                loc += "<span class='loc-name'>%s</span> <span " \
+                       "class='loc-percent'>%s&#37</span>" % (line.location_id.complete_name
+                                                          if rec.plan_id.distribution_plan.distribution_type == 'location'
+                                                          else line.warehouse_id.name, line.percentage)
+            rec.loc_dist = loc

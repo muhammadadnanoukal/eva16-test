@@ -13,36 +13,21 @@ class Season(models.Model):
         'res.company', 'Company', index=True,
         default=lambda self: self.env.company)
 
-
     # Generic configuration fields
-    product_id = fields.One2many('product.product', 'season_id', "Product varient", tracking=True)
+    product_id = fields.One2many('product.product', 'season_id', "Variants", tracking=True)
 
-    product_template_id = fields.One2many('product.template', 'season_id', "Product", tracking=True)
+    product_template_id = fields.One2many('product.template', 'season_id', "Products", store=True, tracking=True)
+
+    @api.onchange('product_template_id','product_id')
+    def _onchange_product_template_id(self):
+        for rec in self:
+            prods = []
+            for tmp in rec.product_template_id:
+                prods += [prod.id for prod in tmp.product_variant_ids]
+            rec.product_id = [(5,0,0)] + [(6,0,prods)]
 
 
     @api.model
     def create(self, vals):
         vals['ref'] = self.env['ir.sequence'].next_by_code('season.ref')
         return super(Season, self).create(vals)
-
-class SeasonLine(models.Model):
-    _name = "season.line"
-
-    company_id = fields.Many2one(
-        related='season_id.company_id', store=True, index=True, readonly=True)
-
-    season_id = fields.Many2one(
-        comodel_name='season',
-        string="Season Reference",
-        required=True, ondelete='cascade', index=True, copy=False)
-
-    # Generic configuration fields
-    product_id = fields.Many2one(
-        comodel_name='product.product',
-        string="Product",
-        change_default=True, ondelete='restrict', check_company=True)
-
-    product_template_id = fields.Many2one(
-        string="Product Template",
-        related='product_id.product_tmpl_id',
-        domain=[('sale_ok', '=', True)])

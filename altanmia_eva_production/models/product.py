@@ -7,6 +7,12 @@ class Product(models.Model):
 
     season_id = fields.Many2one('season', 'Season')
 
+    color = fields.Integer(compute="_compute_color")
+
+    def _compute_color(self):
+        for rec in self:
+            rec.color = rec.product_tmpl_id.id % 10
+
 
 class ProductTemplate(models.Model):
     _inherit = "product.template"
