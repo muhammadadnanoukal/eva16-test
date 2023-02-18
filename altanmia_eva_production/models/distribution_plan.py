@@ -113,4 +113,11 @@ class DistributionLocation(models.Model):
         for record in self:
             if record.percentage > 100 or record.percentage < 0:
                 raise ValidationError(_("Percentage should be between 0 and 100"))
+    
+    @api.onchange('cmp_source_warehouse_id')
+    def _onchange_cmp_source_warehouse_id(self):
+        self.cmp_source_location_id = self.cmp_source_warehouse_id.lot_stock_id
 
+    @api.onchange('cmp_source_location_id')
+    def _onchange_cmp_source_location_id(self):
+        self.cmp_source_warehouse_id = self.cmp_source_location_id.warehouse_id

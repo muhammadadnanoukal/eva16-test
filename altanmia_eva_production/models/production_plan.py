@@ -47,26 +47,6 @@ class ProductionPlan(models.Model):
                     'product_template_id': prod.product_tmpl_id.id,
                 }) for prod in self.season_id.product_id]
 
-    @api.onchange('production_type')
-    def _onchange_production_type(self):
-        if self.production_type == 'tmp':
-            self.production_line = [(5, 0, 0)] + [Command.create(
-                {
-                    'product_id': prod.product_variant_id.id,
-                    'product_template_id': prod.id,
-                }) for prod in self.season_id.product_template_id]
-        else:
-            self.production_line = [(5, 0, 0)] + [Command.create(
-                {
-                    'product_id': prod.id,
-                    'product_template_id': prod.product_tmpl_id.id,
-                }) for prod in self.season_id.product_id]
-
-    @api.onchange('season_id')
-    def _onchange_season_id(self):
-        if self.season_id:
-            self.production_line = [(5,0,0)]+[Command.create({'product_id': prod.id}) for prod in self.season_id.product_id]
-
     season_id = fields.Many2one('season', 'Season')
 
     distribution_plan = fields.Many2one('distribution.plan', 'Distribution Plan')
@@ -75,6 +55,8 @@ class ProductionPlan(models.Model):
                                     tracking=True, domain=[('product_id','!=', False)], default=_default_production_line)
 
     mrp_orders_count = fields.Integer('# MRP Orders', compute='_compute_orders_count')
+
+    dist_type =  fields.Selection(related='distribution_plan.distribution_type')
 
     state = fields.Selection([
         ('draft', "Draft"),
@@ -94,32 +76,94 @@ class ProductionPlan(models.Model):
 
             rec.write({'state': 'confirm'})
 
+    @api.onchange('production_type','season_id','distribution_plan')
+    def _build_prod_lines(self):
+        if not self.season_id:
+            return
+
+        amount = self.distribution_plan.default_production_amount if self.distribution_plan else 0
+        if self.production_type == 'tmp':
+            if self.distribution_plan:
+                dist_total = 0
+                locations = self.distribution_plan.location_line.filtered(lambda l: l.percentage > 0)
+                lines = []
+                for loc in locations:
+                    loc_qty = math.floor(amount* loc.percentage / 100)
+                    dist_total += loc_qty
+                    if loc == locations[-1]:
+                        loc_qty += amount - dist_total
+
+                    if loc_qty <1:
+                        continue
+                    lines += [Command.create(
+                    {
+                        'product_id': prod.product_variant_id.id,
+                        'product_template_id': prod.id,
+                        'production_amount': loc_qty,
+                        'dist_location_id': loc.location_id,
+                        'dist_warehouse_id': loc.warehouse_id,
+                        'dist_cmp_source_location_id': loc.cmp_source_location_id,
+                        'dist_cmp_source_warehouse_id':loc.cmp_source_warehouse_id
+
+                    }) for prod in self.season_id.product_template_id]
+                
+                self.production_line = [(5, 0, 0)] + lines
+                    
+            else:
+                self.production_line = [(5, 0, 0)] + [Command.create(
+                    {
+                        'product_id': prod.product_variant_id.id,
+                        'product_template_id': prod.id,
+                        'production_amount': amount,
+                    }) for prod in self.season_id.product_template_id]
+        else:
+            if self.distribution_plan:
+                dist_total = 0
+                locations = self.distribution_plan.location_line.filtered(lambda l: l.percentage > 0)
+                lines = []
+                for loc in locations:
+                    loc_qty = math.floor(amount* loc.percentage / 100)
+                    dist_total += loc_qty
+                    if loc == locations[-1]:
+                        loc_qty += amount - dist_total
+
+                    if loc_qty <1:
+                        continue
+                    lines += [Command.create(
+                    {
+                        'product_id': prod.id,
+                        'product_template_id': prod.product_tmpl_id.id,
+                        'production_amount': loc_qty,
+                        'dist_location_id': loc.location_id,
+                        'dist_warehouse_id': loc.warehouse_id,
+                        'dist_cmp_source_location_id': loc.cmp_source_location_id,
+                        'dist_cmp_source_warehouse_id':loc.cmp_source_warehouse_id
+
+                    }) for prod in self.season_id.product_id]
+                
+                self.production_line = [(5, 0, 0)] + lines
+            else:
+                self.production_line = [(5, 0, 0)] + [Command.create(
+                {
+                    'product_id': prod.id,
+                    'product_template_id': prod.product_tmpl_id.id,
+                    'production_amount': amount,
+                }) for prod in self.season_id.product_id]
+
+   
     def create_mrp_orders(self, line):
         if line.production_amount == 0:
             return
 
-        dist_total = 0
-        locations = self.distribution_plan.location_line.filtered(lambda l: l.percentage > 0)
-        for loc in locations:
+        products = [line.product_id] if self.production_type=='var' else line.product_template_id.product_variant_ids
 
-            loc_qty = math.floor(line.production_amount * loc.percentage / 100)
-            dist_total += loc_qty
-            if loc == locations[-1]:
-                loc_qty += line.production_amount - dist_total
-
-            if loc_qty == 0:
-                continue
-
-            products = [line.product_id] if line.product_id else line.product_template_id.product_variant_ids
-
-            for prod in products:
-
-                self.env['mrp.production'].create({
+        for prod in products:
+            self.env['mrp.production'].create({
                     'product_id': prod.id,
                     'plan_id': self.id,
-                    'product_qty': loc_qty,
-                    'location_dest_id': loc.location_id.id,
-                    'location_src_id': loc.cmp_source_location_id.id
+                    'product_qty': line.production_amount,
+                    'location_dest_id': line.dist_location_id.id,
+                    'location_src_id': line.dist_cmp_source_location_id.id
                 })
 
     def action_mrp_production_show(self):
@@ -135,15 +179,6 @@ class ProductionPlan(models.Model):
                 order.action_confirm()
             rec.write({'state': 'mrp'})
 
-    @api.onchange('distribution_plan')
-    def _onchange_distribution_plan(self):
-        for rec in self:
-            if not rec.distribution_plan:
-                return
-
-            for line in rec.production_line:
-                line.production_amount = rec.distribution_plan.default_production_amount
-                line._compute_dest_location()
 
 class ProductionPlanLine(models.Model):
     _name = "production.plan.line"
@@ -156,6 +191,8 @@ class ProductionPlanLine(models.Model):
 
     company_id = fields.Many2one(
         related='plan_id.company_id', store=True, index=True, readonly=True)
+
+    
 
     # Generic configuration fields
     product_id = fields.Many2one(
@@ -171,6 +208,29 @@ class ProductionPlanLine(models.Model):
     production_amount = fields.Integer("Production Amount", default=0)
 
     loc_dist = fields.Html("Distribution Locations", compute="_compute_dest_location")
+
+    dist_location_id = fields.Many2one(
+        'stock.location', 'Location',
+        domain=[('usage', 'in', ['internal', 'transit'])],
+        auto_join=True, ondelete='restrict',  index=True, check_company=True)
+
+    dist_warehouse_id = fields.Many2one('stock.warehouse', string="Warehouse", check_company=True)
+
+    dist_cmp_source_location_id = fields.Many2one(
+        'stock.location', 'Component source Location',
+        domain=[('usage', 'in', ['internal', 'transit'])],
+        auto_join=True, ondelete='restrict',  index=True, check_company=True)
+
+    dist_cmp_source_warehouse_id = fields.Many2one('stock.warehouse', string="Component source Warehouse", check_company=True)
+
+    @api.onchange('dist_warehouse_id')
+    def _onchange_dist_warehouse_id(self):
+        self.dist_location_id = self.dist_warehouse_id.lot_stock_id
+
+    @api.onchange('dist_cmp_source_warehouse_id')
+    def _onchange_dist_cmp_source_warehouse_id(self):
+        self.dist_cmp_source_location_id = self.dist_cmp_source_warehouse_id.lot_stock_id
+
 
     def _compute_dest_location(self):
         for rec in self:

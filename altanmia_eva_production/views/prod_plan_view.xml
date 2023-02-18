@@ -48,6 +48,7 @@
                     <group>
 
                         <field name="active" invisible="1"/>
+                        <field name="dist_type" />
                         <field name="company_id" invisible="1"/>
                         <h1>
                             <field name="ref" readonly="True"/>
@@ -62,13 +63,21 @@
                     </group>
 
                     <field name="production_line" widget="one2many">
-                        <tree string="Products" editable="bottom">
+                        <tree string="Products" editable="bottom" default_order="product_template_id, dist_location_id">
                             <field name="company_id" invisible="1"/>
+                            
                             <field name="product_id"
                                    attrs="{'column_invisible': [['parent.production_type', '=', 'tmp']]}"/>
                             <field name="product_template_id"
                                    attrs="{'column_invisible': [['parent.production_type', '=', 'var']]}"/>
-                            <field name="loc_dist"/>
+                            <field name="dist_location_id"
+                                   attrs="{'column_invisible': [['parent.dist_type', '=', 'warehouse']]}"/>
+                            <field name="dist_cmp_source_location_id"
+                                   attrs="{'column_invisible': [['parent.dist_type', '=', 'warehouse']]}"/>
+                            <field name="dist_warehouse_id"
+                                   attrs="{'column_invisible': ['|',('parent.distribution_plan','=',False),('parent.dist_type', '=', 'location')]}"/>
+                            <field name="dist_cmp_source_warehouse_id"
+                                   attrs="{'column_invisible': ['|',('parent.distribution_plan','=',False),('parent.dist_type', '=', 'location')]}"/>
                             <field name="production_amount"/>
                         </tree>
                     </field>
