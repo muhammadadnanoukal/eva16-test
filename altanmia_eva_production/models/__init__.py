@@ -1,1 +1,1 @@
-from . import bom_inherit, season, product, distribution_plan, production_plan, mrp_production
+from . import bom_inherit, season, product, distribution_plan, production_plan, mrp_production, project

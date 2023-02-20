@@ -6,3 +6,5 @@ class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
     plan_id = fields.Many2one("production.plan", 'Production Plan')
+
+    project_task_id = fields.Many2one('project.task', 'Project Task')

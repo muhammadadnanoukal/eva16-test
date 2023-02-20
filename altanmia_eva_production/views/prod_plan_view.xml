@@ -31,12 +31,22 @@
                     <div class="oe_button_box" name="button_box">
                         <!-- mrp production orders button -->
                             <button name="action_mrp_production_show" type="object"
-                                    class="oe_stat_button" icon="fa-bars"
+                                    class="oe_stat_button" icon="fa-files-o"
                                     attrs="{'invisible': [('mrp_orders_count','=', 0)]}">
                                 <div class="o_form_field o_stat_info">
                                     <span class="o_stat_text">
                                         <field name="mrp_orders_count"/>
                                         <span> Mrp Orders</span>
+                                    </span>
+                                </div>
+                            </button>
+                            <button name="action_project_task_show" type="object"
+                                    class="oe_stat_button" icon="fa-tasks"
+                                    attrs="{'invisible': [('project_task_count','=', 0)]}">
+                                <div class="o_form_field o_stat_info">
+                                    <span class="o_stat_text">
+                                        <field name="project_task_count"/>
+                                        <span> Tasks</span>
                                     </span>
                                 </div>
                             </button>

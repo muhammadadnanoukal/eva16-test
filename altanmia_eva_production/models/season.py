@@ -18,6 +18,11 @@ class Season(models.Model):
 
     product_template_id = fields.One2many('product.template', 'season_id', "Products", store=True, tracking=True)
 
+    project_id = fields.Many2one('project.project', 'Project',
+                                 help="Project link to season help you to deal with all manufacturing orders as tasks "
+                                      "in project.\n "
+                                      "If you let it empty, a new project will be created automatically")
+
     @api.onchange('product_template_id','product_id')
     def _onchange_product_template_id(self):
         for rec in self:
@@ -30,4 +35,7 @@ class Season(models.Model):
     @api.model
     def create(self, vals):
         vals['ref'] = self.env['ir.sequence'].next_by_code('season.ref')
+
+        if not vals['project_id']:
+            vals['project_id'] = self.env['project.project'].create({'name':vals['name'] + " Project"}).id
         return super(Season, self).create(vals)

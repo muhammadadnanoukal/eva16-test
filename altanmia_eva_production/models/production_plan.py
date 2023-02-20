@@ -56,6 +56,8 @@ class ProductionPlan(models.Model):
 
     mrp_orders_count = fields.Integer('# MRP Orders', compute='_compute_orders_count')
 
+    project_task_count = fields.Integer('# MRP Orders', compute='_compute_task')
+
     dist_type =  fields.Selection(related='distribution_plan.distribution_type')
 
     state = fields.Selection([
@@ -67,6 +69,10 @@ class ProductionPlan(models.Model):
 
     def _compute_orders_count(self):
         self.mrp_orders_count = self.env['mrp.production'].search_count([('plan_id', '=', self.id)])
+
+    def _compute_task(self):
+        self.project_task_count = self.env['project.task'].search_count([('production_plan_id', '=', self.id)])
+
 
     def action_confirm(self):
         for rec in self:
@@ -158,9 +164,16 @@ class ProductionPlan(models.Model):
         products = [line.product_id] if self.production_type=='var' else line.product_template_id.product_variant_ids
 
         for prod in products:
+            task = self.env['project.task'].create({'project_id':self.season_id.project_id.id,
+                                                    'production_plan_id': self.id,
+                                                    'name': "Produce [%s] %s" %(line.production_amount,prod.name)}) \
+                if self.season_id.project_id else False
+
             self.env['mrp.production'].create({
                     'product_id': prod.id,
                     'plan_id': self.id,
+                    'project_task_id': task.id,
+                    'analytic_account_id': self.season_id.project_id.analytic_account_id.id,
                     'product_qty': line.production_amount,
                     'location_dest_id': line.dist_location_id.id,
                     'location_src_id': line.dist_cmp_source_location_id.id
@@ -170,6 +183,18 @@ class ProductionPlan(models.Model):
         self.ensure_one()
         action = self.env["ir.actions.actions"]._for_xml_id("mrp.mrp_production_action")
         action['domain'] = [('plan_id', '=', self.id)]
+        return action
+
+    def action_project_task_show(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("project.act_project_project_2_project_task_all")
+        action['domain'] = [('production_plan_id', '=', self.id)]
+        action['context'] = {
+            'default_project_id': self.season_id.project_id.id,
+            'show_project_update': True,
+            'active_id':self.season_id.project_id.id
+        }
+
         return action
 
     def action_manufacture(self):

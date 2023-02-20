@@ -8,6 +8,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//label[@for='product_qty']" position="before">
                         <field name="plan_id" readonly="1" attrs="{ 'invisible': [('plan_id', '=', False)]}"/>
+                        <field name="project_task_id" readonly="1" attrs="{ 'invisible': [('project_task_id', '=', False)]}"/>
                 </xpath>
             </field>
     </record>
