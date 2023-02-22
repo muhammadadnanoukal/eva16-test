@@ -7,6 +7,7 @@
             <field name="inherit_id" ref="project.view_task_form2"/>
             <field name="arch" type="xml">
                 <xpath expr="//page[@name='description_page']" position="before">
+                    <field name="porder_state" invisible="1"/>
                     <page string="Components" name="components">
                             <field name="move_raw_ids">
                                 <tree default_order="is_done, manual_consumption desc, sequence" editable="bottom">
@@ -36,20 +37,21 @@
 
                                     <field name="state" invisible="1" force_save="1"/>
                                     <field name="should_consume_qty" invisible="1"/>
-                                    <field name="product_uom_qty" widget="mrp_should_consume" force_save="1" string="To Consume" width="1"/>
+                                    <field name="product_uom_qty" widget="mrp_should_consume" force_save="1" string="To Consume" width="1" attrs="{'readonly': ['|', ('parent.porder_state', '!=', 'draft'), ('parent.porder_state', 'not in', ('confirmed', 'progress', 'to_close'))]}"/>
                                     <field name="product_uom" attrs="{'readonly': [('state', '!=', 'draft'), ('id', '!=', False)]}" options="{'no_open': True, 'no_create': True}" groups="uom.group_uom"/>
                                     <field name="product_type" invisible="1"/>
                                     <field name="product_qty" invisible="1" readonly="1"/>
                                     <field name="reserved_availability" invisible="1"/>
                                     <field name="forecast_expected_date" invisible="1"/>
                                     <!-- Button are used in state draft to doesn't have the name of the column "Reserved"-->
-                                    <button type="object" name="action_product_forecast_report" title="Forecast Report" icon="fa-area-chart"/>
-                                    <button type="object" name="action_product_forecast_report" title="Forecast Report" icon="fa-area-chart text-danger" attrs="{'invisible': [('forecast_availability', '&gt;=', 0)]}"/>
-                                    <field name="forecast_availability" string="Reserved" widget="forecast_widget"/>
+                                    <button type="object" name="action_product_forecast_report" title="Forecast Report" icon="fa-area-chart" attrs="{'column_invisible': [('parent.porder_state', '!=', 'draft')], 'invisible': [('forecast_availability', '&lt;', 0)]}"/>
+                                    <button type="object" name="action_product_forecast_report" title="Forecast Report" icon="fa-area-chart text-danger" attrs="{'column_invisible': [('parent.porder_state', '!=', 'draft')], 'invisible': [('forecast_availability', '&gt;=', 0)]}"/>
+                                    <field name="forecast_availability" string="Reserved" attrs="{'column_invisible': [('parent.porder_state', 'in', ('draft', 'done'))]}" widget="forecast_widget"/>
                                     <field name="quantity_done" string="Consumed" class="o_manual_consumption"
                                         decoration-bf="not manual_consumption"
                                         decoration-success="not is_done and (quantity_done - should_consume_qty == 0)"
                                         decoration-warning="not is_done and (quantity_done - should_consume_qty &gt; 0.0001)"
+                                           attrs="{'column_invisible': [('parent.porder_state', '=', 'draft')], 'readonly': [('has_tracking', '!=','none')]}"
                                         force_save="1"/>
                                     <field name="manual_consumption" invisible="1" force_save="1"/>
                                     <field name="show_details_visible" invisible="1"/>
@@ -61,6 +63,7 @@
                                         groups="stock.group_production_lot"
                                         context="{'default_company_id': company_id, 'default_product_id': product_id}"
                                         domain="[('product_id','=',product_id)]"
+                                           attrs="{'invisible': ['|', ('show_details_visible', '=', False), ('parent.porder_state', '=', 'draft')],}"
                                     />
                                     <field name="group_id" invisible="1"/>
                                     <button name="action_show_details" type="object" title="Show Details" icon="fa-list" context="{'default_product_uom_qty': 0}" attrs="{'invisible': ['|', ('show_details_visible', '=', False), ('has_tracking', '=','none')]}" options="{&quot;warn&quot;: true}"/>

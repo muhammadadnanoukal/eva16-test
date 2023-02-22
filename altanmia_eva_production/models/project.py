@@ -17,6 +17,8 @@ class Task(models.Model):
 
     production_plan_id = fields.Many2one('production.plan', 'Production Plan')
 
+    porder_state = fields.Selection(related="mrp_order_id.state", string="Production Order State", store=False)
+
     @api.depends('mrp_order_ids')
     def _compute_mrp_order(self):
         for p in self:

@@ -164,20 +164,23 @@ class ProductionPlan(models.Model):
         products = [line.product_id] if self.production_type=='var' else line.product_template_id.product_variant_ids
 
         for prod in products:
-            task = self.env['project.task'].create({'project_id':self.season_id.project_id.id,
-                                                    'production_plan_id': self.id,
-                                                    'name': "Produce [%s] %s" %(line.production_amount,prod.name)}) \
-                if self.season_id.project_id else False
 
-            self.env['mrp.production'].create({
+            prod_order =  self.env['mrp.production'].create({
                     'product_id': prod.id,
                     'plan_id': self.id,
-                    'project_task_id': task.id,
                     'analytic_account_id': self.season_id.project_id.analytic_account_id.id,
                     'product_qty': line.production_amount,
                     'location_dest_id': line.dist_location_id.id,
                     'location_src_id': line.dist_cmp_source_location_id.id
                 })
+            if self.season_id.project_id:
+                variant = prod.product_template_attribute_value_ids._get_combination_name()
+                name = variant and "%s (%s)" % (prod.name, variant) or prod.name
+                task = self.env['project.task'].create({'project_id': self.season_id.project_id.id,
+                                                    'production_plan_id': self.id,
+                                                    'name': "%s - Produce [%s] %s" % (prod_order.name,line.production_amount, name)}) \
+
+                prod_order.write({'project_task_id': task.id,})
 
     def action_mrp_production_show(self):
         self.ensure_one()
