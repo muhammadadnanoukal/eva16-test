@@ -3,7 +3,6 @@ from odoo.exceptions import UserError, ValidationError
 
 
 class Project(models.Model):
-
     _inherit = "project.project"
 
 class Task(models.Model):

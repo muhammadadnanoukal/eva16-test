@@ -21,6 +21,7 @@
         'views/dist_plan_view.xml',
         'views/prod_plan_view.xml',
         'views/project_view.xml',
+        'views/purchase_view.xml',
         'views/mrp_production_view.xml',
         'views/main_menu.xml',
         'data/sequence_data.xml',

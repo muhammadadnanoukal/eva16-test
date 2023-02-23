@@ -2,24 +2,74 @@
 <odoo>
 
     <record id="product_season_form" model="ir.ui.view">
-            <field name="name">product_season.form</field>
-            <field name="model">product.product</field>
-            <field name="inherit_id" ref="product.product_template_form_view"/>
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='detailed_type']" position="after">
-                        <field name="season_id"/>
-                </xpath>
-            </field>
+        <field name="name">product_season.form</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='detailed_type']" position="after">
+                <field name="season_id"/>
+            </xpath>
+        </field>
     </record>
 
     <record id="tmp_season_form" model="ir.ui.view">
-            <field name="name">tmp_season.form</field>
-            <field name="model">product.template</field>
-            <field name="inherit_id" ref="product.product_template_form_view"/>
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='detailed_type']" position="after">
-                        <field name="season_id"/>
-                </xpath>
-            </field>
+        <field name="name">tmp_season.form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='detailed_type']" position="after">
+                <field name="season_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="tmp_eva_form" model="ir.ui.view">
+        <field name="name">tmp.eva.form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='variants']" position="replace">
+                <page invisible=" context.get('variant_focus', False)" name="variants" string="Attributes &amp; Variants" groups="product.group_product_variant">
+                    <field name="attribute_line_ids" widget="one2many" context="{'show_attribute': False}">
+                        <tree string="Variants" editable="bottom" decoration-info="value_count &lt;= 1">
+                            <field name="value_count" invisible="1"/>
+                            <field name="attribute_id" attrs="{'readonly': [('id', '!=', False)]}"/>
+                            <field name="value_ids" widget="many2many_tags"
+                                   options="{'no_create_edit': True, 'color_field': 'color'}"
+                                   context="{'default_attribute_id': attribute_id, 'show_attribute': False}"/>
+                            <button string="Configure" class="float-end btn-secondary"
+                                    type="object" name="action_open_attribute_values"
+                                    groups="product.group_product_variant"/>
+                        </tree>
+                    </field>
+                    <p class="oe_grey oe_edit_only">
+                        <strong>Warning</strong>: adding or deleting attributes
+                        will delete and recreate existing variants and lead
+                        to the loss of their possible customizations.
+                    </p>
+                </page>
+
+                <page invisible="not context.get('variant_focus', False)" autofocus="autofocus" name="variants" string="Attributes &amp; Variants" groups="product.group_product_variant">
+                    <field name="attribute_line_ids" widget="one2many" context="{'show_attribute': False}">
+                        <tree string="Variants" editable="bottom" decoration-info="value_count &lt;= 1">
+                            <field name="value_count" invisible="1"/>
+                            <field name="attribute_id" attrs="{'readonly': [('id', '!=', False)]}"/>
+                            <field name="value_ids" widget="many2many_tags"
+                                   options="{'no_create_edit': True, 'color_field': 'color'}"
+                                   context="{'default_attribute_id': attribute_id, 'show_attribute': False}"/>
+                            <button string="Configure" class="float-end btn-secondary"
+                                    type="object" name="action_open_attribute_values"
+                                    groups="product.group_product_variant"/>
+                        </tree>
+                    </field>
+                    <p class="oe_grey oe_edit_only">
+                        <strong>Warning</strong>: adding or deleting attributes
+                        will delete and recreate existing variants and lead
+                        to the loss of their possible customizations.
+                    </p>
+                </page>
+
+            </xpath>
+        </field>
     </record>
 </odoo>
