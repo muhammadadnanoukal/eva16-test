@@ -2,7 +2,7 @@ from odoo import api, fields, models, _, Command
 from odoo.exceptions import UserError, ValidationError
 
 
-class Product(models.Model):
+class ProductInherit(models.Model):
     _inherit ="product.product"
 
     season_id = fields.Many2one('season', 'Season')
@@ -14,7 +14,7 @@ class Product(models.Model):
             rec.color = rec.product_tmpl_id.id % 10
 
 
-class ProductTemplate(models.Model):
+class ProductTemplateInherit(models.Model):
     _inherit = "product.template"
 
     season_id = fields.Many2one('season', 'Season')

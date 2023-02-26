@@ -1,7 +1,7 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
-class PurchaseOrderLine(models.Model):
+class PurchaseOrderLineInherit(models.Model):
     _inherit = "purchase.order.line"
 
     project_id = fields.Many2one("project.project", "Project")
@@ -9,5 +9,5 @@ class PurchaseOrderLine(models.Model):
     stage_id = fields.Many2one('project.task.type', string='Stage', store=False, related="task_id.stage_id")
 
     @api.onchange('project_id')
-    def onchange_product_id(self):
+    def onchange_project_id(self):
         self.task_id = False
