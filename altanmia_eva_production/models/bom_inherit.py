@@ -80,3 +80,8 @@ class MrpBomLine(models.Model):
             res = super(MrpBomLine, self).create(vals_list)
 
         return res
+
+    @api.onchange('product_template_id')
+    def onchange_product_template_id(self):
+        if self.product_template_id:
+            self.product_uom_id = self.product_template_id.uom_id.id
